@@ -1,5 +1,4 @@
 - autodetect COM ports and powermeters
 - adapt GUI automatically to number of powermeters available
 - provide statistical data on power recordings
-- fix autoscale not scaling correctly
 - show serial numbers of power meters

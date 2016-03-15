@@ -1,0 +1,7 @@
+Version 1.1.0 - 15.3.2016
+
+- Add 10% offset to min and max values to not let graphs stick to the edge of the plot
+- Filename for logs can now actually be changed without restarting the program, d'oh
+- Data is stored internally for a day now and the display range can be changed on the fly
+- Increase font size for current power labels
+- Show indicator colors for logfolder and log active indicator
