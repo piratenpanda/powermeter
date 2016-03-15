@@ -3,7 +3,7 @@
 __author__ = "Benjamin Grimm-Lebsanft"
 __copyright__ = "Copyright 2016, Benjamin Grimm-Lebsanft"
 __license__ = "Public Domain"
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 __email__ = "benjamin@lebsanft.org"
 __status__ = "Production"
 
@@ -169,8 +169,8 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
         self.axes.plot(data1, 'r')
         self.axes.set_xlim(len(data1)-self.display_length,len(data1))
-        self.ymin = float(min(data1))-0.1*min(data1)
-        self.ymax = float(max(data1))+0.1*max(data1)
+        self.ymin = float(min(data1[len(data1)-self.display_length:len(data1)]))-0.1*min(data1[len(data1)-self.display_length:len(data1)])
+        self.ymax = float(max(data1[len(data1)-self.display_length:len(data1)]))+0.1*max(data2[len(data1)-self.display_length:len(data1)])
         self.axes.set_ylim(self.ymin,self.ymax)        
         self.draw()
 
@@ -194,9 +194,9 @@ class MyDynamicMplCanvas2(MyMplCanvas):
     def update_figure2(self):
 
         self.axes.plot(data2, 'g')
-        self.axes.set_xlim(len(data1)-self.display_length,len(data2))
-        self.ymin = float(min(data1))-0.1*min(data2)
-        self.ymax = float(max(data1))+0.1*max(data2)
+        self.axes.set_xlim(len(data2)-self.display_length,len(data2))
+        self.ymin = float(min(data2[len(data2)-self.display_length:len(data2)]))-0.1*min(data2[len(data2)-self.display_length:len(data2)])
+        self.ymax = float(max(data2[len(data2)-self.display_length:len(data2)]))+0.1*max(data2[len(data2)-self.display_length:len(data2)])
         self.axes.set_ylim(self.ymin,self.ymax)
         self.draw()
 

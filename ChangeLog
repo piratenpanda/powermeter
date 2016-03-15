@@ -10,3 +10,8 @@ Version 1.1.1 - 15.3.2016
 
 - Switch to HBox/VBox layout
 - Fixes here and there
+
+Version 1.1.2 - 15.3.2016
+
+- Make autoscale actually work in the shown region not the whole data set
+
