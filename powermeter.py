@@ -3,7 +3,7 @@
 __author__ = "Benjamin Grimm-Lebsanft"
 __copyright__ = "Copyright 2016, Benjamin Grimm-Lebsanft"
 __license__ = "Public Domain"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __email__ = "benjamin@lebsanft.org"
 __status__ = "Production"
 
@@ -141,8 +141,8 @@ class MyMplCanvas(FigureCanvas):
         self.setParent(parent)
 
         FigureCanvas.setSizePolicy(self,
-                                   QSizePolicy.Expanding,
-                                   QSizePolicy.Expanding)
+                                   QSizePolicy.Fixed,
+                                   QSizePolicy.Fixed)
         FigureCanvas.updateGeometry(self)
 
     def compute_initial_figure(self):
@@ -307,8 +307,6 @@ class UI(QWidget):
         tab_widget = QTabWidget()
         tab1 = QWidget()
         tab2 = QWidget()
-        p1_vertical = QFormLayout(tab1)
-        p2_vertical = QFormLayout(tab2)
         tab_widget.addTab(tab1, "Main")
         tab_widget.addTab(tab2, "Advanced") 
 
@@ -324,22 +322,35 @@ class UI(QWidget):
         self.currentPowerLabel2.setAlignment(Qt.AlignLeft)
         self.currentPowerLabel2.setStyleSheet('font-size: 20pt')
 
-
         ### add QLineEdit for power meter 1 display length
 
         self.pm1DisplayLength = QLineEdit(self)
-        self.pm1DisplayLength.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.pm1DisplayLength.setAlignment(Qt.AlignLeft)
         self.pm1DisplayLength.setText(str(MyDynamicMplCanvas.display_length))
         self.pm1DisplayLength.setInputMask("99999")
+        self.pm1DisplayLength.setFixedWidth(100)
         self.pm1DisplayLength.textChanged.connect(self.setpm1DisplayLength)
 
         ### add QLineEdit for power meter 2 display length
 
         self.pm2DisplayLength = QLineEdit(self)
-        self.pm2DisplayLength.setAlignment(Qt.AlignRight)
+        self.pm2DisplayLength.setAlignment(Qt.AlignLeft)
         self.pm2DisplayLength.setText(str(MyDynamicMplCanvas2.display_length))
         self.pm2DisplayLength.setInputMask("99999")
+        self.pm2DisplayLength.setFixedWidth(100)
         self.pm2DisplayLength.textChanged.connect(self.setpm2DisplayLength)
+
+        ### add label for display lenght info 1
+
+        self.pm1DisplayLengthLabel = QLabel(self)
+        self.pm1DisplayLengthLabel.setAlignment(Qt.AlignLeft)
+        self.pm1DisplayLengthLabel.setText("Number of seconds displayed: ")
+
+        ### add label for display lenght info 2
+
+        self.pm2DisplayLengthLabel = QLabel(self)
+        self.pm2DisplayLengthLabel.setAlignment(Qt.AlignLeft)
+        self.pm2DisplayLengthLabel.setText("Number of seconds displayed: ")
 
         ### add QLineEdit for log file name
 
@@ -373,26 +384,48 @@ class UI(QWidget):
 
         ### add MyDynamicMplCanvas for power display of power meter 1
 
-        self.PowerPlot1 = QWidget(self)
-        l = QVBoxLayout(self.PowerPlot1)
-        dc = MyDynamicMplCanvas(self.PowerPlot1)
-        l.addWidget(dc)
+        self.PowerPlot1 = MyDynamicMplCanvas(QWidget(self))
 
         ### add MyDynamicMplCanvas for power display of power meter 2
 
-        self.PowerPlot2 = QWidget(self)
-        l2 = QVBoxLayout(self.PowerPlot2)
-        dc2 = MyDynamicMplCanvas2(self.PowerPlot2)
-        l2.addWidget(dc2)
+        self.PowerPlot2 = MyDynamicMplCanvas2(QWidget(self))
      
-        ### put widgets into the QFormLayout of tab1 here
+        ### create Layout
 
-        p1_vertical.addRow(self.currentPowerLabel, self.currentPowerLabel2)
-        p1_vertical.addRow(self.PowerPlot1, self.PowerPlot2)
-        p1_vertical.addRow(self.pm1DisplayLength, self.pm2DisplayLength)
-        p1_vertical.addRow(self.logActive)
-        p1_vertical.addRow(self.logFoldername,self.getDirectoryButton)
-        p1_vertical.addRow(self.logFilename,self.startLoggingButton)
+        left = QVBoxLayout()
+        left.addWidget(self.currentPowerLabel, 0)
+        left.addWidget(self.PowerPlot1, 1)
+
+        displaysettings1 = QHBoxLayout()
+
+        displaysettings1.addWidget(self.pm1DisplayLengthLabel, 1)
+        displaysettings1.addWidget(self.pm1DisplayLength, 1, Qt.AlignLeft)
+
+        left.addLayout(displaysettings1, 2)
+
+        right = QVBoxLayout()
+        right.addWidget(self.currentPowerLabel2, 0)
+        right.addWidget(self.PowerPlot2, 1)
+
+        displaysettings2= QHBoxLayout()
+
+        displaysettings2.addWidget(self.pm2DisplayLengthLabel, 1)
+        displaysettings2.addWidget(self.pm2DisplayLength, 1, Qt.AlignLeft)
+
+        right.addLayout(displaysettings2, 2)
+
+        top = QHBoxLayout()
+        top.addLayout(left, 1)    # Both sides take the same amount of space.
+        top.addLayout(right, 1)
+
+        main = QVBoxLayout()
+        main.addLayout(top,0)
+        main.addWidget(self.logActive, 1)
+        main.addWidget(self.logFilename, 2)
+        main.addWidget(self.logFoldername, 3)
+        main.addWidget(self.getDirectoryButton, 4, Qt.AlignLeft)
+        main.addWidget(self.startLoggingButton, 5, Qt.AlignLeft)
+
 
         ### put widgets into the QFormLayout of tab2 here
 		
@@ -403,11 +436,11 @@ class UI(QWidget):
         self.setWindowTitle("Power meter")
         vbox = QVBoxLayout()
         vbox.addWidget(tab_widget)
-        self.setLayout(vbox) 
+        self.setLayout(main) 
 
     def setpm1DisplayLength(self, *args, **kwargs):
 
-        if (self.pm1DisplayLength.text() == "" or self.pm1DisplayLength.text() == "0"):
+        if (self.pm1DisplayLength.text() == "" or int(self.pm1DisplayLength.text()) == 0):
             setlength = len(data1)
             self.pm1DisplayLength.setText(str(len(data1)))
         elif (int(self.pm1DisplayLength.text()) > len(data1)):
@@ -420,7 +453,7 @@ class UI(QWidget):
 
     def setpm2DisplayLength(self, *args, **kwargs):
         
-        if (self.pm2DisplayLength.text() == "" or self.pm2DisplayLength.text() == "0"):
+        if (self.pm2DisplayLength.text() == "" or int(self.pm2DisplayLength.text()) == 0):
             setlength = len(data2)
             self.pm2DisplayLength.setText(str(len(data2)))
         elif (int(self.pm2DisplayLength.text()) > len(data2)):
@@ -439,7 +472,6 @@ class UI(QWidget):
     @pyqtSlot(str)
     def writeLog(self, logvalues):
         log = self.logFoldername.text()[33:] + "/" + self.logfilename
-        print(log)
         logging.basicConfig(filename=log,level=logging.DEBUG,filemode="w+", format='%(asctime)s,%(message)s', datefmt='%d.%m.%Y - %H:%M:%S')
         logging.info(self.currentPowerLabel.text()[17:] + "," + self.currentPowerLabel2.text()[17:])
 

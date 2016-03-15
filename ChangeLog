@@ -5,3 +5,8 @@ Version 1.1.0 - 15.3.2016
 - Data is stored internally for a day now and the display range can be changed on the fly
 - Increase font size for current power labels
 - Show indicator colors for logfolder and log active indicator
+
+Version 1.1.1 - 15.3.2016
+
+- Switch to HBox/VBox layout
+- Fixes here and there
