@@ -15,3 +15,9 @@ Version 1.1.2 - 15.3.2016
 
 - Make autoscale actually work in the shown region not the whole data set
 
+Version 1.2.0 - 04.05.2016
+
+- Switch layout type again
+- Make shown seconds selectable for users and remove hardcoded values
+- Preparations to move to vesa (seems to be buggy for older power meters)
+
