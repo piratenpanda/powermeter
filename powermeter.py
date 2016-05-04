@@ -3,11 +3,12 @@
 __author__ = "Benjamin Grimm-Lebsanft"
 __copyright__ = "Copyright 2016, Benjamin Grimm-Lebsanft"
 __license__ = "Public Domain"
-__version__ = "1.1.2"
+__version__ = "1.2.0"
 __email__ = "benjamin@lebsanft.org"
 __status__ = "Production"
 
 import serial, time, sys, random, matplotlib, decimal, logging, os
+#import visa
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -17,8 +18,10 @@ from decimal import *
 
 ### global data storage for later use in plots (1 day in seconds)
 
-data1 = [0] * 86400
-data2 = [0] * 86400
+data1 = []
+data2 = []
+#rm = visa.ResourceManager('@py')
+#list_of_insts = rm.list_resources()
 
 ### Real serial thread 1
 
@@ -28,7 +31,10 @@ class Worker(QObject):
     def __init__(self):
         print("Serial thread init")
         super().__init__()
-        self.ser = serial.Serial("COM6", timeout=1, xonxoff=True)
+        self.ser = serial.Serial("/dev/ttyACM0", timeout=1, xonxoff=True)
+        #if(len(list_of_insts)>=1):
+            #self.my_test_inst = rm.open_resource(list_of_insts[0])
+
 
     def work(self):
         print("Worker work")
@@ -37,9 +43,12 @@ class Worker(QObject):
             self.ser.flushOutput()
             self.ser.write(bytearray("pw?\r\n",'ascii'))
             power = self.ser.readline().decode("utf-8").lstrip().rstrip()
-            powermW = float(power) * 1000
-            roundedpowermW = (float("{0:.3f}".format(powermW)))
+            powermW = float(power) * 1000            
+            
+            #response = self.my_test_inst.query('READ?').split(",")
+            roundedpowermW = (float("{0:.6f}".format(powermW)))
             self.finished.emit(roundedpowermW)
+            time.sleep(0.1)
 			
 class Worker2(QObject):
     finished2 = pyqtSignal(float)
@@ -47,7 +56,7 @@ class Worker2(QObject):
     def __init__(self):
         print("Serial thread init")
         super().__init__()
-        self.ser = serial.Serial("COM7", timeout=1, xonxoff=True)
+        self.ser = serial.Serial("/dev/ttyACM0", timeout=1, xonxoff=True)
 
     def work(self):
         print("Worker work")
@@ -127,11 +136,7 @@ class MyMplCanvas(FigureCanvas):
 
         ### We want the axes cleared every time plot() is called
 
-        self.axes.hold(False)
-
-        ### We want the axes background to be non intrusive
-
-        self.axes.set_alpha(0)
+        self.axes.hold(True)
 
         self.compute_initial_figure()
 
@@ -159,7 +164,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
         MyMplCanvas.__init__(self, *args, **kwargs)
         timer = QTimer(self)
         timer.timeout.connect(self.update_figure)
-        timer.start(1000)
+        timer.start(10)
 
 
     ### plot data1 in red, max and min values used for y limits with a 10% offset.
@@ -169,9 +174,9 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
         self.axes.plot(data1, 'r')
         self.axes.set_xlim(len(data1)-self.display_length,len(data1))
-        self.ymin = float(min(data1[len(data1)-self.display_length:len(data1)]))-0.1*min(data1[len(data1)-self.display_length:len(data1)])
-        self.ymax = float(max(data1[len(data1)-self.display_length:len(data1)]))+0.1*max(data2[len(data1)-self.display_length:len(data1)])
-        self.axes.set_ylim(self.ymin,self.ymax)        
+        #self.ymin = float(min(data1[len(data1)-self.display_length:len(data1)]))-0.1*min(data1[len(data1)-self.display_length:len(data1)])
+        #self.ymax = float(max(data1[len(data1)-self.display_length:len(data1)]))+0.1*max(data2[len(data1)-self.display_length:len(data1)])
+        #self.axes.set_ylim(self.ymin,self.ymax)        
         self.draw()
 
 class MyDynamicMplCanvas2(MyMplCanvas):
@@ -185,7 +190,7 @@ class MyDynamicMplCanvas2(MyMplCanvas):
         MyMplCanvas.__init__(self, *args, **kwargs)
         timer = QTimer(self)
         timer.timeout.connect(self.update_figure2)
-        timer.start(1000)
+        timer.start(10)
 
 
     ### plot data1 in green, max and min values used for y limits with a 10% offset.
@@ -212,10 +217,10 @@ class Powermeter(QMainWindow):
 
         self.THREEPLACES = Decimal(10) ** -3
   
-        ### create a new thread for power data from power meter 2
+        ### create a new thread for power data from power meter 1
 
         self.getPowerThread = QThread()
-        self.getPowerData = DummySerial1()
+        self.getPowerData = Worker()
         self.getPowerData.finished[float].connect(self.onDataReceived)
         self.getPowerData.moveToThread(self.getPowerThread)
         self.getPowerThread.started.connect(self.getPowerData.work)
@@ -239,7 +244,8 @@ class Powermeter(QMainWindow):
     def onDataReceived(self, powervalue):
         self.form_widget.currentPowerLabel.setText("Current Power 1: " + str(Decimal(powervalue).quantize(self.THREEPLACES)) + " mW")
         data1.append(powervalue)
-        del data1[0]
+        if(len(data1) >= 5000):
+            del data1[0]
 
     ### Slot to receive the "onDataReceived2" signal from the power meter 2 power data thread.
     ### Writes recieved data into the first position of data2 and drops the last element to
@@ -250,7 +256,8 @@ class Powermeter(QMainWindow):
     def onDataReceived2(self, powervalue2): 
         self.form_widget.currentPowerLabel2.setText("Current Power 2: " + str(Decimal(powervalue2).quantize(self.THREEPLACES)) + " mW")
         data2.append(powervalue2)
-        del data2[0]
+        if(len(data2) >= 5000):
+            del data2[0]
 
 class UI(QWidget):
 
@@ -443,9 +450,6 @@ class UI(QWidget):
         if (self.pm1DisplayLength.text() == "" or int(self.pm1DisplayLength.text()) == 0):
             setlength = len(data1)
             self.pm1DisplayLength.setText(str(len(data1)))
-        elif (int(self.pm1DisplayLength.text()) > len(data1)):
-            setlength = len(data1)
-            self.pm1DisplayLength.setText(str(len(data1)))
         else:
             setlength = self.pm1DisplayLength.text()
         
@@ -454,9 +458,6 @@ class UI(QWidget):
     def setpm2DisplayLength(self, *args, **kwargs):
         
         if (self.pm2DisplayLength.text() == "" or int(self.pm2DisplayLength.text()) == 0):
-            setlength = len(data2)
-            self.pm2DisplayLength.setText(str(len(data2)))
-        elif (int(self.pm2DisplayLength.text()) > len(data2)):
             setlength = len(data2)
             self.pm2DisplayLength.setText(str(len(data2)))
         else:
