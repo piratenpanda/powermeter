@@ -236,7 +236,7 @@ class Powermeter(QMainWindow):
         self.getPowerThread2.start()       
 
     ### Slot to receive the "onDataReceived" signal from the power meter 1 power data thread.
-    ### Writes recieved data into the first position of data1 and drops the last element to
+    ### Writes received data into the first position of data1 and drops the last element to
     ### keep data1 always the same length. Sets the text of currentPowerLabel to the received
     ### value after setting it to three decimals using the THREEPLACES macro defined above.
 
@@ -248,7 +248,7 @@ class Powermeter(QMainWindow):
             del data1[0]
 
     ### Slot to receive the "onDataReceived2" signal from the power meter 2 power data thread.
-    ### Writes recieved data into the first position of data2 and drops the last element to
+    ### Writes received data into the first position of data2 and drops the last element to
     ### keep data2 always the same length. Sets the text of currentPowerLabel2 to the received 
     ### value after setting it to three decimals using the THREEPLACES macro defined above.
 
