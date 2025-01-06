@@ -19,5 +19,5 @@ Version 1.2.0 - 04.05.2016
 
 - Switch layout type again
 - Make shown seconds selectable for users and remove hardcoded values
-- Preparations to move to vesa (seems to be buggy for older power meters)
+- Preparations to move to visa (seems to be buggy for older power meters)
 
